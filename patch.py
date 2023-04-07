@@ -7,27 +7,22 @@
     Copyright (c) 2008-2016 anatoly techtonik
     Available under the terms of MIT license
 
+    https://github.com/techtonik/python-patch/
+
 """
 from __future__ import print_function
+import pathlib
+import time
 
 __author__ = "anatoly techtonik <techtonik@gmail.com>"
 __version__ = "1.16"
-__license__ = "MIT"
-__url__ = "https://github.com/techtonik/python-patch"
 
 import copy
 import logging
 import re
 
-# cStringIO doesn't support unicode in 2.5
-try:
-  from StringIO import StringIO
-except ImportError:
-  from io import BytesIO as StringIO # python 3
-try:
-  import urllib2 as urllib_request
-except ImportError:
-  import urllib.request as urllib_request
+from io import BytesIO as StringIO
+import urllib.request as urllib_request
 
 from os.path import exists, isfile, abspath
 import os
@@ -35,22 +30,12 @@ import posixpath
 import shutil
 import sys
 
-
-PY3K = sys.version_info >= (3, 0)
-
-# PEP 3114
-if not PY3K:
-  compat_next = lambda gen: gen.next()
-else:
-  compat_next = lambda gen: gen.__next__()
+compat_next = lambda gen: gen.__next__()
 
 def tostr(b):
   """ Python 3 bytes encoder. Used to print filename in
       diffstat output. Assumes that filenames are in utf-8.
   """
-  if not PY3K:
-    return b
-
   # [ ] figure out how to print non-utf-8 filenames without
   #     information loss
   return b.decode('utf-8')    
@@ -66,22 +51,10 @@ debug = logger.debug
 info = logger.info
 warning = logger.warning
 
-class NullHandler(logging.Handler):
-  """ Copied from Python 2.7 to avoid getting
-      `No handlers could be found for logger "patch"`
-      http://bugs.python.org/issue16539
-  """
-  def handle(self, record):
-    pass
-  def emit(self, record):
-    pass
-  def createLock(self):
-    self.lock = None
-
 streamhandler = logging.StreamHandler()
 
 # initialize logger itself
-logger.addHandler(NullHandler())
+logger.addHandler(logging.NullHandler())
 
 debugmode = False
 
@@ -99,7 +72,6 @@ def setdebug():
     logger.addHandler(streamhandler)
 
   streamhandler.setFormatter(logging.Formatter(logformat))
-
 
 #------------------------------------------------
 # Constants for Patch/PatchSet types
@@ -337,7 +309,7 @@ class PatchSet(object):
     hunkparsed = False # state after successfully parsed hunk
 
     # regexp to match start of hunk, used groups - 1,3,4,6
-    re_hunk_start = re.compile(br"^@@ -(\d+)(,(\d+))? \+(\d+)(,(\d+))? @@")
+    re_hunk_start = re.compile(b"^@@ -(\d+)(,(\d+))? \+(\d+)(,(\d+))? @@")
     
     self.errors = 0
     # temp buffers for header and filenames info
@@ -479,7 +451,7 @@ class PatchSet(object):
             # attempt to restart from this second line
           re_filename = b"^--- ([^\t]+)"
           match = re.match(re_filename, line)
-          # todo: support spaces in filenames
+          # TODO: support spaces in filenames
           if match:
             srcname = match.group(1).strip()
           else:
@@ -516,7 +488,7 @@ class PatchSet(object):
             filenames = False
             headscan = True
           else:
-            re_filename = br"^\+\+\+ ([^\t]+)"
+            re_filename = b"^\+\+\+ ([^\t]+)"
             match = re.match(re_filename, line)
             if not match:
               warning("skipping invalid patch - no target filename at line %d" % (lineno+1))
@@ -542,7 +514,7 @@ class PatchSet(object):
               continue
 
       if hunkhead:
-        match = re.match(br"^@@ -(\d+)(,(\d+))? \+(\d+)(,(\d+))? @@(.*)", line)
+        match = re.match(b"^@@ -(\d+)(,(\d+))? \+(\d+)(,(\d+))? @@(.*)", line)
         if not match:
           if not p.hunks:
             warning("skipping invalid patch with no hunks for file %s" % p.source)
@@ -697,9 +669,13 @@ class PatchSet(object):
     for i,p in enumerate(self.items):
       if debugmode:
         debug("    patch type = " + p.type)
-        debug("    source = " + p.source)
-        debug("    target = " + p.target)
-      if p.type in (HG, GIT):
+        debug("    source = " +str(p.source))
+        debug("    target = " + str(p.target))
+        
+      source_null = False
+      target_null = False
+      
+      if p.type in (HG, GIT): # Partialy dead!
         # TODO: figure out how to deal with /dev/null entries
         debug("stripping a/ and b/ prefixes")
         if p.source != '/dev/null':
@@ -712,19 +688,29 @@ class PatchSet(object):
             warning("invalid target filename")
           else:
             p.target = p.target[2:]
-
-      p.source = xnormpath(p.source)
-      p.target = xnormpath(p.target)
+      if p.source == b'/dev/null':
+        print(True)
+        source_null = True
+      else:
+        print(False)
+      if p.target == b'/dev/null':
+        print(True)
+        target_null = True
+      else:
+        print(False)
+      print(p.source, p.target)
+      p.source = xnormpath(p.source) if not source_null else b'/dev/null'
+      p.target = xnormpath(p.target) if not target_null else b'/dev/null'
 
       sep = b'/'  # sep value can be hardcoded, but it looks nice this way
 
       # references to parent are not allowed
-      if p.source.startswith(b".." + sep):
+      if p.source.startswith(b".." + sep) and not source_null:
         warning("error: stripping parent path for source file patch no.%d" % (i+1))
         self.warnings += 1
         while p.source.startswith(b".." + sep):
           p.source = p.source.partition(sep)[2]
-      if p.target.startswith(b".." + sep):
+      if p.target.startswith(b".." + sep) and not target_null:
         warning("error: stripping parent path for target file patch no.%d" % (i+1))
         self.warnings += 1
         while p.target.startswith(b".." + sep):
@@ -733,12 +719,12 @@ class PatchSet(object):
       if xisabs(p.source) or xisabs(p.target):
         warning("error: absolute paths are not allowed - file no.%d" % (i+1))
         self.warnings += 1
-        if xisabs(p.source):
-          warning("stripping absolute path from source name '%s'" % p.source)
-          p.source = xstrip(p.source)
-        if xisabs(p.target):
-          warning("stripping absolute path from target name '%s'" % p.target)
-          p.target = xstrip(p.target)
+      if xisabs(p.source) and not source_null:
+        warning("stripping absolute path from source name '%s'" % p.source)
+        p.source = xstrip(p.source)
+      if xisabs(p.target) and not target_null:
+        warning("stripping absolute path from target name '%s'" % p.target)
+        p.target = xstrip(p.target)
     
       self.items[i].source = p.source
       self.items[i].target = p.target
@@ -799,28 +785,34 @@ class PatchSet(object):
     output += (" %d files changed, %d insertions(+), %d deletions(-), %+d bytes"
                % (len(names), sum(insert), sum(delete), delta))
     return output
-
-
+  
   def findfile(self, old, new):
     """ return name of file to be patched or None """
-    if exists(old):
+    old_null = old.startswith(b'/dev/null')
+    new_null = new.startswith(b'/dev/null')
+    if exists(old) and not old_null:
       return old
-    elif exists(new):
+    elif exists(new) and not new_null:
       return new
     else:
       # [w] Google Code generates broken patches with its online editor
-      debug("broken patch from Google Code, stripping prefixes..")
-      if old.startswith(b'a/') and new.startswith(b'b/'):
-        old, new = old[2:], new[2:]
-        debug("   %s" % old)
-        debug("   %s" % new)
-        if exists(old):
-          return old
-        elif exists(new):
-          return new
+      debug("May be a and b not stripped; stripping prefixes..")
+      old = old[2:] if old.startswith(b'a/') or old.startswith(b'b/') else old
+      new = new[2:] if new.startswith(b'b/') or new.startswith(b'a/') else new 
+      debug("   %s" % old)
+      debug("   %s" % new)
+      old_null = old.startswith(b'/dev/null')
+      new_null = new.startswith(b'/dev/null')
+      if exists(old) and not old_null:
+        return old
+      elif exists(new) and not new_null:
+        return new
+      elif old_null:
+        return new
+      elif new_null:
+        return old
       return None
-
-
+  
   def apply(self, strip=0, root=None):
     """ Apply parsed patch, optionally stripping leading components
         from file paths. `root` parameter specifies working dir.
@@ -855,23 +847,44 @@ class PatchSet(object):
         old, new = p.source, p.target
 
       filename = self.findfile(old, new)
-
-      if not filename:
+      
+      if not filename and not (old.startswith(b'/dev/null') or new.startswith(b'/dev/null')):
           warning("source/target file does not exist:\n  --- %s\n  +++ %s" % (old, new))
           errors += 1
           continue
-      if not isfile(filename):
+      if not isfile(filename) and not (old.startswith(b'/dev/null') or new.startswith(b'/dev/null')):
         warning("not a file - %s" % filename)
         errors += 1
         continue
-
+      
       # [ ] check absolute paths security here
       debug("processing %d/%d:\t %s" % (i+1, total, filename))
 
+      # Write to output file, if source/target is /dev/null (it's not present)
+      remmaped = [] 
+      is_negative = False
+      if not isfile(filename):
+        for x in range(len(p.hunks)):
+          curh = p.hunks[x]
+          if is_negative:
+            break
+          for y in range(len(curh.text)):
+            if curh.text[y].decode('utf-8').startswith("-"):
+              is_negative = True
+              break
+            remmaped.append(curh.text[y].decode('utf-8')[1:] if len(curh.text[y].decode('utf-8')) > 1 else "")
+        to_write = "".join(remmaped)
+        if is_negative:
+          continue
+        fw = open(pathlib.Path(filename.decode('utf-8')), 'w', encoding='utf-8')
+        fw.write(to_write)
+        fw.close()
+        debug("Successfully created unpatchable file!")
+        continue
       # validate before patching
-      f2fp = open(filename, 'rb')
       hunkno = 0
       hunk = p.hunks[hunkno]
+      f2fp = open(filename, 'rb')
       hunkfind = []
       hunkreplace = []
       validhunks = 0
