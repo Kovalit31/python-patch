@@ -1,3 +1,7 @@
+##### 1.17
+  - Remove Python 2 support (EOL)
+  - Add file adding feature
+
 ##### 1.16
 
   - Python 3 support, thanks to Yen Chi Hsuan (@yan12125)
