@@ -1,10 +1,10 @@
 Library to parse and apply unified diffs.
 
-[![Build Status](https://img.shields.io/travis/techtonik/python-patch/master)](https://travis-ci.org/techtonik/python-patch/branches) [![PyPI](https://img.shields.io/pypi/v/patch)](https://pypi.python.org/pypi/patch)
+[![Build Status](https://img.shields.io/travis/techtonik/python-patch/master)](https://travis-ci.org/Kovalit31/python-patch/branches) [![PyPI](https://img.shields.io/pypi/v/patch)](https://pypi.python.org/pypi/patch)
 
 ### Features
 
- * Python 2 and 3 compatible
+ * Python 3 compatible # EOL initiated here
  * Automatic correction of
    * Linefeeds according to patched file
    * Diffs broken by stripping trailing whitespace
@@ -19,10 +19,10 @@ Library to parse and apply unified diffs.
 Things that don't work out of the box:
 
  * File renaming, creation and removal
- * Directory tree operations
+ * Directory tree operations (Partly*)
  * Version control specific properties
  * Non-unified diff formats
-
+* You can use it to patch files in directory with same name of patched ones and add files ("--- /dev/null")
 
 ### Usage
 
@@ -44,6 +44,16 @@ specifiers to avoid hitting an API break when version 2 is released:
 
     pip install "patch==1.*"
 
+## API
+patch.fromfile(file) - Load patch from file
+patch.fromstring(string) - Load patch from string
+patch.ffromuri(uri) - Load patch from uri (need for active internet)
+
+For example:
+```
+pt = patcher.fromfile("mydiff.patch")
+pt.apply()
+```
 
 ### Other stuff
 
