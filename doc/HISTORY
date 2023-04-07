@@ -1,3 +1,4 @@
+Maintainer:
 In 2008 there was no reliable Windows tool to apply patches,
 and there was no cross-platform solution that could be safely
 run by web server process.
@@ -14,3 +15,6 @@ was born.
 *patch.py* was meant to be a cross-platoform tool with intuitive
 defaults, taking care of the most problems (e.g. line end
 differences) automatically.
+
+I'm:
+Together, in 2023, again need for tool, what will be crossplatform. On this way have python and this repository.
