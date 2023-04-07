@@ -33,7 +33,7 @@ module without external dependencies.
 
 You can also run the .zip file.
     
-    python patch-1.16.zip diff.patch
+    python patch-1.17.zip diff.patch
 
 ### Installation
 
