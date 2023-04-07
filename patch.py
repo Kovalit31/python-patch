@@ -5,17 +5,18 @@
     Brute-force line-by-line non-recursive parsing 
 
     Copyright (c) 2008-2016 anatoly techtonik
+                  2023 Kovalit31
     Available under the terms of MIT license
 
-    https://github.com/techtonik/python-patch/
-
+    Original: https://github.com/techtonik/python-patch/
+    Newer: https://github.com/Kovalit31/python-patch
 """
 from __future__ import print_function
 import pathlib
 import time
 
-__author__ = "anatoly techtonik <techtonik@gmail.com>"
-__version__ = "1.16"
+__author__ = "anatoly techtonik <techtonik@gmail.com>, Kovalit31 <nonecone20@gmail.com>"
+__version__ = "1.17"
 
 import copy
 import logging
