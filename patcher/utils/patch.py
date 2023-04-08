@@ -402,6 +402,7 @@ class PatchSet(object):
     _e, _w, self.items = pathutil.normalize_filenames(self.items, self.logger, debugmode=self.debugmode)
     self.errors += _e
     self.warnings += _w
+    print(self.items)
     return (self.errors == 0)
 
   def _detect_type(self, p):
