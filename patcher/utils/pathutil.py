@@ -97,17 +97,12 @@ def normalize_filenames(_items, logger: lg.Log, debugmode=False):
                     logger.warning("invalid target filename")
                 else:
                     p.target = p.target[2:]
+        
         if p.source == b'/dev/null':
-            print(True)
             source_null = True
-        else:
-            print(False)
         if p.target == b'/dev/null':
-            print(True)
             target_null = True
-        else:
-            print(False)
-        print(p.source, p.target)
+        
         p.source = xnormpath(p.source) if not source_null else b'/dev/null'
         p.target = xnormpath(p.target) if not target_null else b'/dev/null'
 
