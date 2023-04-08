@@ -5,6 +5,7 @@
 # cross-platform manner - all paths use forward
 # slashes even on Windows.
 
+import copy
 import posixpath
 import re
 import os
@@ -58,7 +59,7 @@ def pathstrip(path, n):
   return b'/'.join(pathlist[n:])
 # --- /Utility function ---
 
-def normalize_filenames(items, logger: lg.Log, debugmode=False):
+def normalize_filenames(_items, logger: lg.Log, debugmode=False):
     """ sanitize filenames, normalizing paths, i.e.:
         1. strip a/ and b/ prefixes from GIT and HG style patches
         2. remove all references to parent directories (with warning)
@@ -71,7 +72,7 @@ def normalize_filenames(items, logger: lg.Log, debugmode=False):
     """
     warnings = 0
     errors = 0
-    items = []
+    items = copy.deepcopy(_items)
     if debugmode:
         logger.debug("normalize filenames")
     for i,p in enumerate(items):
