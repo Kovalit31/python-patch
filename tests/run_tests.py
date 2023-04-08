@@ -60,7 +60,7 @@ def testfile(name):
 # import patch.py from parent directory
 save_path = sys.path
 sys.path.insert(0, dirname(TESTS))
-import patch
+import patcher as patch
 sys.path = save_path
 
 
@@ -148,14 +148,14 @@ class TestPatchFiles(unittest.TestCase):
 
       # 3.
       # test utility as a whole
-      patch_tool = join(dirname(TESTS), "patch.py")
+      patch_tool = join(dirname(TESTS), "patcher")
       save_cwd = getcwdu()
       os.chdir(tmpdir)
       if verbose:
-        cmd = '%s %s "%s"' % (sys.executable, patch_tool, patch_file)
+        cmd = '%s -m %s "%s"' % (sys.executable, patch_tool, patch_file)
         print("\n"+cmd)
       else:
-        cmd = '%s %s -q "%s"' % (sys.executable, patch_tool, patch_file)
+        cmd = '%s -m %s -q "%s"' % (sys.executable, patch_tool, patch_file)
       ret = os.system(cmd)
       assert ret == 0, "Error %d running test %s" % (ret, testname)
       os.chdir(save_cwd)
@@ -322,7 +322,7 @@ class TestPatchParse(unittest.TestCase):
 class TestPatchSetDetection(unittest.TestCase):
     def test_svn_detected(self):
         pto = patch.fromfile(join(TESTS, "01uni_multi/01uni_multi.patch"))
-        self.assertEqual(pto.type, patch.SVN)
+        self.assertEqual(pto.type, patch.utils.variables.SVN)
 
 # generate tests methods for TestPatchSetDetection - one for each patch file
 def generate_detection_test(filename, patchtype):
@@ -338,13 +338,13 @@ for filename in os.listdir(TESTDATA):
   if isdir(join(TESTDATA, filename)):
     continue
 
-  difftype = patch.PLAIN
+  difftype = patch.utils.variables.PLAIN
   if filename.startswith('git-'):
-    difftype = patch.GIT
+    difftype = patch.utils.variables.GIT
   if filename.startswith('hg-'):
-    difftype = patch.HG
+    difftype = patch.utils.variables.HG
   if filename.startswith('svn-'):
-    difftype = patch.SVN
+    difftype = patch.utils.variables.SVN
 
   name = 'test_'+filename
   test = generate_detection_test(filename, difftype)

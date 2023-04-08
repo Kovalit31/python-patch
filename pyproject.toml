@@ -1,0 +1,31 @@
+[project]
+name = "patcher"
+version = "1.17"
+description = "Library to parse and apply unified diffs"
+readme = "README.md"
+requires-python = ">=3.4"
+license = {file = "LICENSE"}
+keywords = ["patch", "diff", "patcher", "patch library", "diff applier", "parse"]
+authors = [
+  {name = "Anatoly Techtonik", email = "techtonik@gmail.com"},
+  {name = "Kovalit31", email = "nonecone20@gmail.com"}
+]
+maintainers = [
+  {name = "Kovalit31", email = "nonecone20@gmail.com"}
+]
+classifiers = [
+    "Environment :: Console",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Utilities"
+]
+
+dependencies = []
+
+[project.urls]
+repository = "https://github.com/Kovalit31/python-patch.git"
+changelog = "https://github.com/Kovalit31/python-patch/blob/master/doc/CHANGES.md"
+
+[project.scripts]
+patcher = "patcher.__main__:main"
