@@ -30,4 +30,8 @@ class Log():
         if not self.stream_handler in self.logger.handlers:
             self.logger.addHandler(self.stream_handler)
         self.stream_handler.setFormatter(format)
-    
+
+def set_debug(lg: Log):
+    lg.set_verbosity(logging.DEBUG)
+    lg.set_logformat("%(levelname)8s %(message)s")
+    return lg

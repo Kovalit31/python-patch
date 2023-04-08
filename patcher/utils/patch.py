@@ -49,6 +49,8 @@ class PatchSet(object):
     self.debugmode = debugmode
     if stream:
       self.parse(stream)
+    if debugmode:
+      self.logger = logger.set_debug(self.logger)
 
   def __len__(self):
     return len(self.items)

@@ -3,6 +3,8 @@ from optparse import OptionParser
 from os.path import exists
 import sys
 from .utils import patch, pathutil, logger
+from . import fromfile, fromstring, fromurl
+patcher = patch
 
 __author__ = "anatoly techtonik <techtonik@gmail.com>, Kovalit31 <nonecone20@gmail.com>"
 __version__ = "1.17"
@@ -33,13 +35,14 @@ def main():
     opt.print_help()
     sys.exit()
   readstdin = (sys.argv[-1:] == ['--'] and not args)
-
+  debugmode = False
   verbosity_levels = {0:logging.WARNING, 1:logging.INFO, 2:logging.DEBUG}
   loglevel = verbosity_levels[options.verbosity]
   logformat = "%(message)s"
   lg = logger.Log(logging_name=__name__)
 
   if options.debugmode:
+    debugmode = True
     loglevel = logging.DEBUG
     logformat = "%(levelname)8s %(message)s"  # this sets global debugmode variable
 
@@ -47,17 +50,17 @@ def main():
   lg.set_logformat(logformat)
   
   if readstdin:
-    patch = patch.PatchSet(sys.stdin)
+    patch = patcher.PatchSet(sys.stdin, lg=lg, debugmode=debugmode)
   else:
     patchfile = args[0]
     urltest = patchfile.split(':')[0]
     if (':' in patchfile and urltest.isalpha()
         and len(urltest) > 1): # one char before : is a windows drive letter
-      patch = patch.fromurl(patchfile)
+      patch = fromurl(patchfile, debugmode=debugmode)
     else:
       if not exists(patchfile) or not pathutil.isfile(patchfile):
         sys.exit("patch file does not exist - %s" % patchfile)
-      patch = patch.fromfile(patchfile)
+      patch = fromfile(patchfile, debugmode=debugmode)
 
   if options.diffstat:
     print(patch.diffstat())

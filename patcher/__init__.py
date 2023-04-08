@@ -21,11 +21,11 @@ from . import utils
 
 logger = utils.logger.Log(logging_name=__name__)
 
-def fromfile(filename):
+def fromfile(filename, debugmode=False):
   """ Parse patch file. If successful, returns
       PatchSet() object. Otherwise returns False.
   """
-  patchset = utils.patch.PatchSet()
+  patchset = utils.patch.PatchSet(lg=logger, debugmode=debugmode)
   logger.debug("reading %s" % filename)
   fp = open(filename, "rb")
   res = patchset.parse(fp)
@@ -35,22 +35,22 @@ def fromfile(filename):
   return False
 
 
-def fromstring(s):
+def fromstring(s, debugmode=False):
   """ Parse text string and return PatchSet()
       object (or False if parsing fails)
   """
-  ps = utils.patch.PatchSet(StringIO(s))
+  ps = utils.patch.PatchSet(StringIO(s), lg=logger, debugmode=debugmode)
   if ps.errors == 0:
     return ps
   return False
 
 
-def fromurl(url):
+def fromurl(url, debugmode=False):
   """ Parse patch from an URL, return False
       if an error occured. Note that this also
       can throw urlopen() exceptions.
   """
-  ps = utils.patch.PatchSet(urllib.request.urlopen(url))
+  ps = utils.patch.PatchSet(urllib.request.urlopen(url), debugmode=debugmode, lg=logger)
   if ps.errors == 0:
     return ps
   return False
