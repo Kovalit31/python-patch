@@ -399,8 +399,9 @@ class PatchSet(object):
       self.type = types.pop()
     # --------
 
-    self._normalize_filenames()
-    
+    _e, _w, self.items = pathutil.normalize_filenames(self.items, self.logger, debugmode=self.debugmode)
+    self.errors += _e
+    self.warnings += _w
     return (self.errors == 0)
 
   def _detect_type(self, p):
