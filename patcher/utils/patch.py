@@ -609,7 +609,7 @@ class PatchSet(object):
               is_negative = True
               break
             remmaped.append(curh.text[y].decode('utf-8')[1:] if len(curh.text[y].decode('utf-8')) > 1 else "")
-        to_write = "".join(remmaped)
+        to_write = "".join(remmaped).replace("\r\n", "\n")
         if is_negative:
           continue
         fw = open(pathlib.Path(filename.decode('utf-8')), 'w', encoding='utf-8')

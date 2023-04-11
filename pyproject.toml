@@ -1,6 +1,6 @@
 [project]
 name = "patcher"
-version = "1.17"
+version = "1.17.1"
 description = "Library to parse and apply unified diffs"
 readme = "README.md"
 requires-python = ">=3.4"
